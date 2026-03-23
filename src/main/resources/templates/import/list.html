@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'imports')}">
+<head><title>Phiếu nhập kho</title></head>
+<body><main>
+<div class="card">
+    <div class="card-header">
+        <h6 class="card-title"><i class="bi bi-download"></i> Danh sách Phiếu nhập kho</h6>
+        <div class="d-flex align-items-center gap-3">
+            <form th:action="@{/imports}" method="get" class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="search" th:value="${search}" placeholder="Tìm mã phiếu..." class="form-control">
+            </form>
+            <a th:href="@{/imports/new}" class="btn-primary-custom"><i class="bi bi-plus-lg"></i> Tạo phiếu nhập</a>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="inv-table">
+            <thead><tr>
+                <th>#</th><th>Mã phiếu</th><th>Ngày nhập</th><th>Nhà cung cấp</th>
+                <th>Số hóa đơn</th><th>Mặt hàng</th><th>Tổng tiền</th>
+                <th>Thanh toán</th><th>Trạng thái</th><th class="actions">Thao tác</th>
+            </tr></thead>
+            <tbody>
+            <tr th:if="${orders.empty}">
+                <td colspan="10" style="text-align:center;padding:40px;color:#aaa;">
+                    <i class="bi bi-inbox" style="font-size:32px;display:block;"></i>Chưa có phiếu nhập nào
+                </td>
+            </tr>
+            <tr th:each="o,stat : ${orders.content}">
+                <td th:text="${orders.number*orders.size+stat.index+1}" style="color:#aaa;font-size:12px;"></td>
+                <td><span style="font-family:monospace;font-weight:700;color:var(--primary);" th:text="${o.code}"></span></td>
+                <td th:text="${#temporals.format(o.orderDate,'dd/MM/yyyy')}"></td>
+                <td th:text="${o.supplier?.name ?: '—'}"></td>
+                <td th:text="${o.invoiceNumber ?: '—'}" style="font-size:12px;color:#888;"></td>
+                <td><span style="background:#e8eaf6;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600;"
+                          th:text="${o.detailCount}+' sp'"></span></td>
+                <td style="font-weight:600;color:var(--primary);"
+                    th:text="${#numbers.formatDecimal(o.finalAmount,0,'COMMA',0,'POINT')+' ₫'}"></td>
+                <td>
+                    <span th:class="'badge-status ' + (${o.paymentStatus.name()=='PAID'}?'badge-completed':
+                                    (${o.paymentStatus.name()=='PARTIAL'}?'badge-pending':'badge-cancelled'))"
+                          th:text="${o.paymentStatus.displayName}"></span>
+                </td>
+                <td>
+                    <span th:class="'badge-status ' + ${o.status.cssClass}" th:text="${o.status.displayName}"></span>
+                </td>
+                <td class="actions">
+                    <a th:href="@{/imports/{id}(id=${o.id})}" class="btn-sm-action btn-view"><i class="bi bi-eye"></i></a>
+                    <form sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:if="${o.pending}" th:action="@{/imports/{id}/complete(id=${o.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Xác nhận nhập kho? Tồn kho sẽ được cập nhật.')">
+                        <button type="submit" class="btn-sm-action btn-success-custom" title="Xác nhận nhập"><i class="bi bi-check-lg"></i></button>
+                    </form>
+                    <form sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:if="${o.pending}" th:action="@{/imports/{id}/cancel(id=${o.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Hủy phiếu nhập này?')">
+                        <button type="submit" class="btn-sm-action btn-delete" title="Hủy phiếu"><i class="bi bi-x-lg"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-wrapper">
+        <div style="font-size:13px;color:#888;"><strong th:text="${orders.numberOfElements}"></strong> / <strong th:text="${orders.totalElements}"></strong> phiếu</div>
+        <nav th:if="${orders.totalPages > 1}"><ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${orders.first}?'disabled'">
+                <a class="page-link" th:href="@{/imports(page=${orders.number-1},search=${search})}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            <li class="page-item" th:each="i:${#numbers.sequence(0,orders.totalPages-1)}" th:classappend="${i==orders.number}?'active'">
+                <a class="page-link" th:href="@{/imports(page=${i},search=${search})}" th:text="${i+1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${orders.last}?'disabled'">
+                <a class="page-link" th:href="@{/imports(page=${orders.number+1},search=${search})}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+        </ul></nav>
+    </div>
+</div>
+</main></body></html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'suppliers')}">
+<head><title>Nhà cung cấp</title></head>
+<body><main>
+<div class="card">
+    <div class="card-header">
+        <h6 class="card-title"><i class="bi bi-truck"></i> Danh sách Nhà cung cấp</h6>
+        <div class="d-flex align-items-center gap-3">
+            <form th:action="@{/suppliers}" method="get" class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="search" th:value="${search}" placeholder="Tìm mã, tên..." class="form-control">
+            </form>
+            <a sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:href="@{/suppliers/new}" class="btn-primary-custom"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="inv-table">
+            <thead><tr>
+                <th>#</th><th>Mã NCC</th><th>Tên nhà cung cấp</th><th>Người LH</th>
+                <th>Điện thoại</th><th>Email</th><th>Hạn mức nợ</th><th>Nợ hiện tại</th>
+                <th>Trạng thái</th><th class="actions">Thao tác</th>
+            </tr></thead>
+            <tbody>
+            <tr th:if="${suppliers.empty}">
+                <td colspan="10" style="text-align:center;padding:40px;color:#aaa;">
+                    <i class="bi bi-inbox" style="font-size:32px;display:block;"></i>Không có nhà cung cấp nào
+                </td>
+            </tr>
+            <tr th:each="s,stat : ${suppliers.content}">
+                <td th:text="${suppliers.number*suppliers.size+stat.index+1}" style="color:#aaa;font-size:12px;"></td>
+                <td><span style="font-family:monospace;font-weight:600;color:var(--primary);" th:text="${s.code}"></span></td>
+                <td>
+                    <div style="font-weight:600;" th:text="${s.name}"></div>
+                    <div th:if="${s.taxCode}" style="font-size:11px;color:#aaa;" th:text="'MST: '+${s.taxCode}"></div>
+                </td>
+                <td th:text="${s.contactPerson ?: '—'}"></td>
+                <td th:text="${s.phone ?: '—'}"></td>
+                <td th:text="${s.email ?: '—'}"></td>
+                <td th:text="${s.creditLimit!=null ? #numbers.formatDecimal(s.creditLimit,0,'COMMA',0,'POINT')+' ₫' : '—'}"></td>
+                <td>
+                    <span th:if="${s.overCreditLimit}" style="color:#c62828;font-weight:700;"
+                          th:text="${#numbers.formatDecimal(s.currentDebt,0,'COMMA',0,'POINT')+' ₫'}">0</span>
+                    <span th:unless="${s.overCreditLimit}"
+                          th:text="${#numbers.formatDecimal(s.currentDebt,0,'COMMA',0,'POINT')+' ₫'}">0</span>
+                </td>
+                <td>
+                    <span th:if="${s.status}" class="badge-status badge-active">Hoạt động</span>
+                    <span th:unless="${s.status}" class="badge-status badge-inactive">Ngừng</span>
+                </td>
+                <td class="actions">
+                    <a th:href="@{/suppliers/{id}/edit(id=${s.id})}" class="btn-sm-action btn-edit"><i class="bi bi-pencil"></i></a>
+                    <form th:action="@{/suppliers/{id}/delete(id=${s.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Xóa nhà cung cấp này?')">
+                        <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-wrapper">
+        <div style="font-size:13px;color:#888;"><strong th:text="${suppliers.numberOfElements}"></strong> / <strong th:text="${suppliers.totalElements}"></strong> nhà cung cấp</div>
+        <nav th:if="${suppliers.totalPages > 1}"><ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${suppliers.first}?'disabled'">
+                <a class="page-link" th:href="@{/suppliers(page=${suppliers.number-1},search=${search})}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            <li class="page-item" th:each="i:${#numbers.sequence(0,suppliers.totalPages-1)}" th:classappend="${i==suppliers.number}?'active'">
+                <a class="page-link" th:href="@{/suppliers(page=${i},search=${search})}" th:text="${i+1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${suppliers.last}?'disabled'">
+                <a class="page-link" th:href="@{/suppliers(page=${suppliers.number+1},search=${search})}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+        </ul></nav>
+    </div>
+</div>
+</main></body></html>

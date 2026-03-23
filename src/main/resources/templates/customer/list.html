@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'customers')}">
+<head><title>Khách hàng</title></head>
+<body><main>
+<div class="card">
+    <div class="card-header">
+        <h6 class="card-title"><i class="bi bi-people"></i> Danh sách Khách hàng</h6>
+        <div class="d-flex align-items-center gap-3">
+            <form th:action="@{/customers}" method="get" class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="search" th:value="${search}" placeholder="Tìm mã, tên, SĐT..." class="form-control">
+            </form>
+            <a sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:href="@{/customers/new}" class="btn-primary-custom"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="inv-table">
+            <thead><tr>
+                <th>#</th><th>Mã KH</th><th>Tên khách hàng</th><th>Điện thoại</th>
+                <th>Email</th><th>Loại KH</th><th>Tổng mua</th><th>Hạng</th>
+                <th>Trạng thái</th><th class="actions">Thao tác</th>
+            </tr></thead>
+            <tbody>
+            <tr th:if="${customers.empty}">
+                <td colspan="10" style="text-align:center;padding:40px;color:#aaa;">
+                    <i class="bi bi-inbox" style="font-size:32px;display:block;"></i>Không có khách hàng nào
+                </td>
+            </tr>
+            <tr th:each="c,stat : ${customers.content}">
+                <td th:text="${customers.number*customers.size+stat.index+1}" style="color:#aaa;font-size:12px;"></td>
+                <td><span style="font-family:monospace;font-weight:600;color:var(--primary);" th:text="${c.code}"></span></td>
+                <td style="font-weight:600;" th:text="${c.name}"></td>
+                <td th:text="${c.phone ?: '—'}"></td>
+                <td th:text="${c.email ?: '—'}"></td>
+                <td>
+                    <span th:if="${c.customerType=='VIP'}" class="badge-status" style="background:#fff3e0;color:#e65100;">VIP</span>
+                    <span th:if="${c.customerType=='WHOLESALE'}" class="badge-status" style="background:#e8eaf6;color:var(--primary);">Sỉ</span>
+                    <span th:if="${c.customerType=='RETAIL'}" class="badge-status badge-ok">Lẻ</span>
+                </td>
+                <td th:text="${c.totalPurchase!=null?#numbers.formatDecimal(c.totalPurchase,0,'COMMA',0,'POINT')+' ₫':'0 ₫'}"></td>
+                <td>
+                    <span th:text="${c.loyaltyLevel}"
+                          th:style="${c.loyaltyLevel=='VIP'}?'color:#e65100;font-weight:700;':
+                                     (${c.loyaltyLevel=='Vàng'}?'color:#f57f17;font-weight:700;':'color:#888;')">Thường</span>
+                </td>
+                <td>
+                    <span th:if="${c.status}" class="badge-status badge-active">Hoạt động</span>
+                    <span th:unless="${c.status}" class="badge-status badge-inactive">Ngừng</span>
+                </td>
+                <td class="actions">
+                    <a th:href="@{/customers/{id}/edit(id=${c.id})}" class="btn-sm-action btn-edit"><i class="bi bi-pencil"></i></a>
+                    <form th:action="@{/customers/{id}/delete(id=${c.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Xóa khách hàng này?')">
+                        <button type="submit" class="btn-sm-action btn-delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-wrapper">
+        <div style="font-size:13px;color:#888;"><strong th:text="${customers.numberOfElements}"></strong> / <strong th:text="${customers.totalElements}"></strong> khách hàng</div>
+        <nav th:if="${customers.totalPages > 1}"><ul class="pagination mb-0">
+            <li class="page-item" th:classappend="${customers.first}?'disabled'">
+                <a class="page-link" th:href="@{/customers(page=${customers.number-1},search=${search})}"><i class="bi bi-chevron-left"></i></a>
+            </li>
+            <li class="page-item" th:each="i:${#numbers.sequence(0,customers.totalPages-1)}" th:classappend="${i==customers.number}?'active'">
+                <a class="page-link" th:href="@{/customers(page=${i},search=${search})}" th:text="${i+1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${customers.last}?'disabled'">
+                <a class="page-link" th:href="@{/customers(page=${customers.number+1},search=${search})}"><i class="bi bi-chevron-right"></i></a>
+            </li>
+        </ul></nav>
+    </div>
+</div>
+</main></body></html>

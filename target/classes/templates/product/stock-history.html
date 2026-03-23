@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'products')}">
+<head><title th:text="'Lịch sử kho – '+${product.name}">Lịch sử kho</title></head>
+<body><main>
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-4">
+            <div>
+                <h5 class="mb-0" style="font-weight:700;" th:text="${product.name}">Sản phẩm</h5>
+                <span style="font-family:monospace;font-size:13px;color:var(--primary);" th:text="${product.code}"></span>
+            </div>
+            <div class="ms-auto d-flex gap-3">
+                <div class="text-center">
+                    <div style="font-size:24px;font-weight:700;" th:text="${product.quantity}">0</div>
+                    <div style="font-size:12px;color:#888;">Tồn kho hiện tại</div>
+                </div>
+                <div class="text-center">
+                    <span th:class="'badge-status '+${product.stockStatus.cssClass}" th:text="${product.stockStatus.displayName}"></span>
+                </div>
+            </div>
+            <a th:href="@{/products/{id}/edit(id=${product.id})}" class="btn-sm-action btn-edit">
+                <i class="bi bi-pencil"></i> Chỉnh sửa
+            </a>
+            <a th:href="@{/products}" class="btn-sm-action btn-view"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h6 class="card-title"><i class="bi bi-clock-history"></i> Lịch sử biến động tồn kho</h6>
+    </div>
+    <div class="table-wrapper">
+        <table class="inv-table">
+            <thead><tr>
+                <th>Thời gian</th><th>Loại</th><th>Số lượng</th>
+                <th>Trước</th><th>Sau</th><th>Mã tham chiếu</th><th>Ghi chú</th>
+            </tr></thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;color:#aaa;">
+                        <i class="bi bi-info-circle" style="font-size:24px;display:block;"></i>
+                        <p class="mt-2">Tích hợp lịch sử biến động qua StockMovementRepository</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</main></body></html>

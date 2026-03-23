@@ -1,0 +1,552 @@
+@startuml InventorySystem_ClassDiagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classBackgroundColor #F8F9FF
+skinparam classBorderColor #1a237e
+skinparam classHeaderBackgroundColor #1a237e
+skinparam classHeaderFontColor #FFFFFF
+skinparam arrowColor #1a237e
+skinparam noteBackgroundColor #FFF8E1
+skinparam noteBorderColor #F57F17
+
+title Inventory Management System - Class Diagram (OOP Refactored)
+
+' ==================== ENUMS ====================
+package "enums" #E8EAF6 {
+  enum OrderStatus {
+    PENDING
+    COMPLETED
+    CANCELLED
+    --
+    +getDisplayName(): String
+    +isFinal(): boolean
+  }
+
+  enum StockStatus {
+    IN_STOCK
+    LOW_STOCK
+    OUT_OF_STOCK
+    --
+    +getDisplayName(): String
+    +getColor(): String
+  }
+
+  enum UserRole {
+    ADMIN
+    MANAGER
+    STAFF
+    --
+    +getDisplayName(): String
+    +getPermissions(): Set<Permission>
+  }
+
+  enum PaymentStatus {
+    UNPAID
+    PARTIAL
+    PAID
+    --
+    +getDisplayName(): String
+  }
+}
+
+' ==================== BASE ENTITY ====================
+package "entity.base" #E3F2FD {
+  abstract class BaseEntity {
+    #id: Long
+    #createdAt: LocalDateTime
+    #updatedAt: LocalDateTime
+    #createdBy: String
+    #updatedBy: String
+    #deleted: boolean
+    --
+    +{abstract} isValid(): boolean
+    +softDelete(): void
+    +restore(): void
+  }
+  note right of BaseEntity : Audit fields via\n@PrePersist / @PreUpdate
+}
+
+' ==================== ENTITIES ====================
+package "entity" #E8F5E9 {
+  class Category {
+    -name: String
+    -description: String
+    -parentCategory: Category
+    -subCategories: List<Category>
+    -products: List<Product>
+    --
+    +isRootCategory(): boolean
+    +getProductCount(): int
+    +isValid(): boolean
+  }
+
+  class Supplier {
+    -code: String
+    -name: String
+    -contactPerson: String
+    -phone: String
+    -email: String
+    -address: String
+    -taxCode: String
+    -bankAccount: String
+    -bankName: String
+    -creditLimit: BigDecimal
+    -currentDebt: BigDecimal
+    -status: boolean
+    -products: List<Product>
+    -importOrders: List<ImportOrder>
+    --
+    +isOverCreditLimit(): boolean
+    +getRemainingCredit(): BigDecimal
+    +updateDebt(amount: BigDecimal): void
+    +isValid(): boolean
+  }
+
+  class Customer {
+    -code: String
+    -name: String
+    -phone: String
+    -email: String
+    -address: String
+    -taxCode: String
+    -customerType: String
+    -totalPurchase: BigDecimal
+    -status: boolean
+    -exportOrders: List<ExportOrder>
+    --
+    +getLoyaltyLevel(): String
+    +isValid(): boolean
+  }
+
+  class Unit {
+    -name: String
+    -abbreviation: String
+    -description: String
+    --
+    +isValid(): boolean
+  }
+
+  class Warehouse {
+    -code: String
+    -name: String
+    -address: String
+    -capacity: Integer
+    -managerName: String
+    -phone: String
+    -status: boolean
+    --
+    +getCurrentUsage(): Integer
+    +getUsagePercent(): double
+    +isValid(): boolean
+  }
+
+  class Product {
+    -code: String
+    -name: String
+    -barcode: String
+    -category: Category
+    -supplier: Supplier
+    -unit: Unit
+    -warehouse: Warehouse
+    -costPrice: BigDecimal
+    -sellPrice: BigDecimal
+    -quantity: Integer
+    -minQuantity: Integer
+    -maxQuantity: Integer
+    -weight: Double
+    -description: String
+    -imageUrl: String
+    -status: boolean
+    -importDetails: List<ImportDetail>
+    -exportDetails: List<ExportDetail>
+    --
+    +getStockStatus(): StockStatus
+    +isLowStock(): boolean
+    +isOutOfStock(): boolean
+    +getStockValue(): BigDecimal
+    +canExport(qty: Integer): boolean
+    +increaseStock(qty: Integer): void
+    +decreaseStock(qty: Integer): void
+    +isValid(): boolean
+  }
+
+  abstract class AbstractOrder {
+    #code: String
+    #orderDate: LocalDate
+    #totalAmount: BigDecimal
+    #discountAmount: BigDecimal
+    #taxAmount: BigDecimal
+    #finalAmount: BigDecimal
+    #status: OrderStatus
+    #note: String
+    #paymentStatus: PaymentStatus
+    --
+    #{abstract} generateCode(): String
+    #calculateTotal(): void
+    +complete(): void
+    +cancel(): void
+    +isPending(): boolean
+    +isCompleted(): boolean
+    +isValid(): boolean
+  }
+
+  class ImportOrder {
+    -supplier: Supplier
+    -details: List<ImportDetail>
+    -expectedDate: LocalDate
+    -receivedDate: LocalDate
+    -invoiceNumber: String
+    --
+    +generateCode(): String
+    +complete(): void
+    +getDetailCount(): int
+    +getTotalItems(): int
+    +isValid(): boolean
+  }
+
+  class ImportDetail {
+    -importOrder: ImportOrder
+    -product: Product
+    -quantity: Integer
+    -unitPrice: BigDecimal
+    -totalPrice: BigDecimal
+    -expiryDate: LocalDate
+    -batchNumber: String
+    --
+    +calculateTotal(): void
+    +isValid(): boolean
+  }
+
+  class ExportOrder {
+    -customer: Customer
+    -details: List<ExportDetail>
+    -deliveryAddress: String
+    -expectedDelivery: LocalDate
+    -actualDelivery: LocalDate
+    --
+    +generateCode(): String
+    +complete(): void
+    +canComplete(): boolean
+    +getDetailCount(): int
+    +getTotalItems(): int
+    +isValid(): boolean
+  }
+
+  class ExportDetail {
+    -exportOrder: ExportOrder
+    -product: Product
+    -quantity: Integer
+    -unitPrice: BigDecimal
+    -discountPercent: BigDecimal
+    -totalPrice: BigDecimal
+    --
+    +calculateTotal(): void
+    +getDiscountAmount(): BigDecimal
+    +isValid(): boolean
+  }
+
+  class StockMovement {
+    -product: Product
+    -warehouse: Warehouse
+    -movementType: String
+    -quantity: Integer
+    -beforeQuantity: Integer
+    -afterQuantity: Integer
+    -referenceCode: String
+    -referenceType: String
+    -note: String
+    --
+    +isInbound(): boolean
+    +isOutbound(): boolean
+  }
+
+  class AppUser {
+    -username: String
+    -password: String
+    -fullName: String
+    -email: String
+    -phone: String
+    -role: UserRole
+    -status: boolean
+    -lastLogin: LocalDateTime
+    --
+    +isAdmin(): boolean
+    +isManager(): boolean
+    +hasPermission(perm: String): boolean
+    +isValid(): boolean
+  }
+}
+
+' ==================== REPOSITORIES ====================
+package "repository" #FFF3E0 {
+  interface BaseRepository<T, ID> {
+    +findByDeletedFalse(pageable: Pageable): Page<T>
+    +findByIdAndDeletedFalse(id: ID): Optional<T>
+    +countByDeletedFalse(): long
+  }
+
+  interface CategoryRepository {
+    +findByParentCategoryIsNull(): List<Category>
+    +findByParentCategoryId(id: Long): List<Category>
+    +existsByName(name: String): boolean
+  }
+
+  interface SupplierRepository {
+    +findByStatusTrue(): List<Supplier>
+    +findByCodeOrName(code: String, name: String, p: Pageable): Page<Supplier>
+    +existsByCode(code: String): boolean
+  }
+
+  interface CustomerRepository {
+    +findByStatusTrue(): List<Customer>
+    +findByCodeOrNameOrPhone(code: String, name: String, phone: String, p: Pageable): Page<Customer>
+    +existsByCode(code: String): boolean
+  }
+
+  interface ProductRepository {
+    +findLowStockProducts(): List<Product>
+    +findByStatusTrue(): List<Product>
+    +searchProducts(keyword: String, p: Pageable): Page<Product>
+    +existsByCode(code: String): boolean
+    +existsByBarcode(barcode: String): boolean
+  }
+
+  interface ImportOrderRepository {
+    +countByYearAndMonth(year: int, month: int): long
+    +sumAmountByYearAndMonth(year: int, month: int): BigDecimal
+    +findAllOrdered(p: Pageable): Page<ImportOrder>
+    +searchOrders(keyword: String, p: Pageable): Page<ImportOrder>
+  }
+
+  interface ExportOrderRepository {
+    +countByYearAndMonth(year: int, month: int): long
+    +sumAmountByYearAndMonth(year: int, month: int): BigDecimal
+    +findAllOrdered(p: Pageable): Page<ExportOrder>
+    +searchOrders(keyword: String, p: Pageable): Page<ExportOrder>
+  }
+
+  interface StockMovementRepository {
+    +findByProduct(product: Product, p: Pageable): Page<StockMovement>
+    +findByProductIdAndDateRange(productId: Long, from: LocalDate, to: LocalDate): List<StockMovement>
+  }
+
+  interface UserRepository {
+    +findByUsername(username: String): Optional<AppUser>
+    +existsByUsername(username: String): boolean
+    +findByStatusTrue(p: Pageable): Page<AppUser>
+  }
+}
+
+' ==================== SERVICE INTERFACES ====================
+package "service" #FCE4EC {
+  interface ProductService {
+    +findAll(search: String, page: int, size: int): Page<Product>
+    +findById(id: Long): Optional<Product>
+    +findAllActive(): List<Product>
+    +save(product: Product): Product
+    +update(id: Long, product: Product): Product
+    +deleteById(id: Long): void
+    +findLowStockProducts(): List<Product>
+    +countActiveProducts(): long
+    +adjustStock(productId: Long, qty: int, reason: String): void
+  }
+
+  interface SupplierService {
+    +findAll(search: String, page: int, size: int): Page<Supplier>
+    +findById(id: Long): Optional<Supplier>
+    +findAllActive(): List<Supplier>
+    +save(supplier: Supplier): Supplier
+    +update(id: Long, supplier: Supplier): Supplier
+    +deleteById(id: Long): void
+    +countActiveSuppliers(): long
+  }
+
+  interface CustomerService {
+    +findAll(search: String, page: int, size: int): Page<Customer>
+    +findById(id: Long): Optional<Customer>
+    +findAllActive(): List<Customer>
+    +save(customer: Customer): Customer
+    +update(id: Long, customer: Customer): Customer
+    +deleteById(id: Long): void
+  }
+
+  interface ImportService {
+    +findAll(search: String, page: int, size: int): Page<ImportOrder>
+    +findById(id: Long): Optional<ImportOrder>
+    +save(order: ImportOrder): ImportOrder
+    +complete(id: Long): ImportOrder
+    +cancel(id: Long): void
+    +countThisMonth(): long
+    +getTotalAmountThisMonth(): BigDecimal
+  }
+
+  interface ExportService {
+    +findAll(search: String, page: int, size: int): Page<ExportOrder>
+    +findById(id: Long): Optional<ExportOrder>
+    +save(order: ExportOrder): ExportOrder
+    +complete(id: Long): ExportOrder
+    +cancel(id: Long): void
+    +countThisMonth(): long
+    +getTotalAmountThisMonth(): BigDecimal
+  }
+
+  interface ReportService {
+    +getMonthlyImportCounts(year: int): List<Long>
+    +getMonthlyExportCounts(year: int): List<Long>
+    +getMonthlyImportAmounts(year: int): List<BigDecimal>
+    +getMonthlyExportAmounts(year: int): List<BigDecimal>
+    +getDashboardStats(): DashboardStatsDto
+  }
+
+  interface StockService {
+    +recordMovement(movement: StockMovement): void
+    +getMovementHistory(productId: Long, page: int, size: int): Page<StockMovement>
+    +adjustStock(productId: Long, qty: int, reason: String): void
+  }
+}
+
+package "service.impl" #F3E5F5 {
+  class ProductServiceImpl {
+    -productRepository: ProductRepository
+    -stockService: StockService
+    --
+    +findAll(...): Page<Product>
+    +save(product: Product): Product
+    +adjustStock(...): void
+  }
+
+  class ImportServiceImpl {
+    -importOrderRepository: ImportOrderRepository
+    -productRepository: ProductRepository
+    -stockService: StockService
+    --
+    +save(order: ImportOrder): ImportOrder
+    +complete(id: Long): ImportOrder
+  }
+
+  class ExportServiceImpl {
+    -exportOrderRepository: ExportOrderRepository
+    -productRepository: ProductRepository
+    -stockService: StockService
+    --
+    +save(order: ExportOrder): ExportOrder
+    +complete(id: Long): ExportOrder
+    +validateStock(order: ExportOrder): void
+  }
+}
+
+' ==================== DTO ====================
+package "dto" #E0F7FA {
+  class DashboardStatsDto {
+    +totalProducts: long
+    +totalSuppliers: long
+    +totalCustomers: long
+    +importCountThisMonth: long
+    +exportCountThisMonth: long
+    +importAmountThisMonth: BigDecimal
+    +exportAmountThisMonth: BigDecimal
+    +lowStockCount: long
+    +outOfStockCount: long
+    +totalStockValue: BigDecimal
+  }
+
+  class ProductResponseDto {
+    +id: Long
+    +code: String
+    +name: String
+    +categoryName: String
+    +supplierName: String
+    +unitName: String
+    +costPrice: BigDecimal
+    +sellPrice: BigDecimal
+    +quantity: Integer
+    +stockStatus: StockStatus
+    +stockValue: BigDecimal
+  }
+
+  class OrderSummaryDto {
+    +id: Long
+    +code: String
+    +orderDate: LocalDate
+    +partnerName: String
+    +itemCount: int
+    +totalAmount: BigDecimal
+    +status: OrderStatus
+  }
+}
+
+' ==================== EXCEPTIONS ====================
+package "exception" #FFEBEE {
+  class BusinessException {
+    -errorCode: String
+    -message: String
+  }
+  class InsufficientStockException {
+    -productName: String
+    -required: Integer
+    -available: Integer
+  }
+  class DuplicateCodeException {
+    -fieldName: String
+    -value: String
+  }
+  class ResourceNotFoundException {
+    -resourceType: String
+    -id: Long
+  }
+}
+
+' ==================== INHERITANCE ====================
+BaseEntity <|-- Category
+BaseEntity <|-- Supplier
+BaseEntity <|-- Customer
+BaseEntity <|-- Unit
+BaseEntity <|-- Warehouse
+BaseEntity <|-- Product
+BaseEntity <|-- AbstractOrder
+BaseEntity <|-- ImportDetail
+BaseEntity <|-- ExportDetail
+BaseEntity <|-- StockMovement
+BaseEntity <|-- AppUser
+AbstractOrder <|-- ImportOrder
+AbstractOrder <|-- ExportOrder
+
+' ==================== ASSOCIATIONS ====================
+Category "0..1" o-- "0..*" Category : parent/sub
+Category "1" -- "0..*" Product
+Supplier "1" -- "0..*" Product
+Supplier "1" -- "0..*" ImportOrder
+Customer "1" -- "0..*" ExportOrder
+Unit "1" -- "0..*" Product
+Warehouse "1" -- "0..*" Product
+Warehouse "1" -- "0..*" StockMovement
+Product "1" -- "0..*" StockMovement
+
+ImportOrder "1" *-- "1..*" ImportDetail
+ExportOrder "1" *-- "1..*" ExportDetail
+ImportDetail "0..*" -- "1" Product
+ExportDetail "0..*" -- "1" Product
+
+' ==================== IMPLEMENTATIONS ====================
+ProductService <|.. ProductServiceImpl
+ImportService <|.. ImportServiceImpl
+ExportService <|.. ExportServiceImpl
+
+' ==================== REPO EXTENSIONS ====================
+BaseRepository <|-- CategoryRepository
+BaseRepository <|-- SupplierRepository
+BaseRepository <|-- CustomerRepository
+BaseRepository <|-- ProductRepository
+BaseRepository <|-- ImportOrderRepository
+BaseRepository <|-- ExportOrderRepository
+BaseRepository <|-- StockMovementRepository
+BaseRepository <|-- UserRepository
+
+' ==================== EXCEPTIONS HIERARCHY ====================
+RuntimeException <|-- BusinessException
+BusinessException <|-- InsufficientStockException
+BusinessException <|-- DuplicateCodeException
+BusinessException <|-- ResourceNotFoundException
+
+@enduml

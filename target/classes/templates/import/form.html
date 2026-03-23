@@ -1,0 +1,312 @@
+<!doctype html>
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'reports')}"
+>
+  <head>
+    <title>Báo cáo thống kê</title>
+  </head>
+  <body>
+    <main>
+      <!-- KPI -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="bi bi-box-seam"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" th:text="${stats.totalProducts}">0</div>
+            <div class="stat-label">Tổng sản phẩm</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <i class="bi bi-currency-dollar"></i>
+          </div>
+          <div class="stat-info">
+            <div
+              class="stat-value"
+              style="font-size: 20px"
+              th:text="${#numbers.formatDecimal(stats.totalStockValue/1000000,1,'COMMA',1,'POINT')} + ' M ₫'"
+            >
+              0
+            </div>
+            <div class="stat-label">Giá trị tồn kho</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <div
+              class="stat-value"
+              style="color: #f57f17"
+              th:text="${stats.lowStockCount}"
+            >
+              0
+            </div>
+            <div class="stat-label">Sắp hết hàng</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div
+            class="stat-icon"
+            style="
+              background: #ffebee;
+              color: #c62828;
+              width: 54px;
+              height: 54px;
+              border-radius: 14px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 22px;
+              flex-shrink: 0;
+            "
+          >
+            <i class="bi bi-x-circle"></i>
+          </div>
+          <div class="stat-info">
+            <div
+              class="stat-value"
+              style="color: #c62828"
+              th:text="${stats.outOfStockCount}"
+            >
+              0
+            </div>
+            <div class="stat-label">Hết hàng</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="card-title">
+                <i class="bi bi-bar-chart-line"></i> Thống kê nhập – xuất theo
+                tháng
+              </h6>
+              <form
+                th:action="@{/reports}"
+                method="get"
+                class="d-flex align-items-center gap-2"
+              >
+                <select
+                  name="year"
+                  class="form-select form-select-sm"
+                  style="width: 100px"
+                  onchange="this.form.submit()"
+                >
+                  <option
+                    th:each="y : ${#numbers.sequence(2023,2026)}"
+                    th:value="${y}"
+                    th:text="${y}"
+                    th:selected="${y == year}"
+                  ></option>
+                </select>
+              </form>
+            </div>
+            <div class="card-body">
+              <div style="position: relative; height: 300px">
+                <canvas id="monthlyChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="card-title">
+                <i class="bi bi-pie-chart"></i> Phân bổ tồn kho
+              </h6>
+            </div>
+            <div class="card-body">
+              <div style="position: relative; height: 300px">
+                <canvas id="stockChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory table -->
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title">
+            <i class="bi bi-table"></i> Báo cáo tồn kho chi tiết
+          </h6>
+          <button class="btn-sm-action btn-view" onclick="window.print()">
+            <i class="bi bi-printer"></i> In báo cáo
+          </button>
+        </div>
+        <div class="table-wrapper">
+          <table class="inv-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Mã SP</th>
+                <th>Tên sản phẩm</th>
+                <th>Đơn vị</th>
+                <th>Tồn kho</th>
+                <th>Tối thiểu</th>
+                <th>Giá nhập</th>
+                <th>Giá bán</th>
+                <th>Giá trị tồn</th>
+                <th>Tình trạng</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p, stat : ${allProducts}">
+                <td
+                  th:text="${stat.index + 1}"
+                  style="color: #aaa; font-size: 12px"
+                ></td>
+                <td>
+                  <span
+                    style="
+                      font-family: monospace;
+                      color: var(--primary);
+                      font-weight: 600;
+                    "
+                    th:text="${p.code}"
+                  ></span>
+                </td>
+                <td style="font-weight: 600" th:text="${p.name}"></td>
+                <td th:text="${p.unitName ?: '—'}"></td>
+                <td>
+                  <span
+                    th:if="${p.outOfStock}"
+                    style="font-weight: 700; color: #c62828"
+                    th:text="${p.quantity}"
+                  ></span>
+                  <span
+                    th:if="${p.lowStock and !p.outOfStock}"
+                    style="font-weight: 700; color: #f57f17"
+                    th:text="${p.quantity}"
+                  ></span>
+                  <span
+                    th:unless="${p.lowStock or p.outOfStock}"
+                    style="font-weight: 700; color: #2e7d32"
+                    th:text="${p.quantity}"
+                  ></span>
+                </td>
+                <td th:text="${p.minQuantity}"></td>
+                <td
+                  th:text="${p.costPrice != null ? #numbers.formatDecimal(p.costPrice,0,'COMMA',0,'POINT')+' ₫' : '—'}"
+                ></td>
+                <td
+                  th:text="${p.sellPrice != null ? #numbers.formatDecimal(p.sellPrice,0,'COMMA',0,'POINT')+' ₫' : '—'}"
+                ></td>
+                <td
+                  style="font-weight: 600"
+                  th:text="${#numbers.formatDecimal(p.stockValue,0,'COMMA',0,'POINT')+' ₫'}"
+                ></td>
+                <td>
+                  <span
+                    th:class="'badge-status ' + ${p.stockStatus.cssClass}"
+                    th:text="${p.stockStatus.displayName}"
+                  ></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chart.js script: dùng th:inline="javascript" để inject số từ server, KHÔNG inject object phức tạp -->
+      <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+          // Số liệu nhập/xuất theo tháng — inject mảng Long/BigDecimal (an toàn)
+          const importCounts = /*[[${importCounts}]]*/ [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          ];
+          const exportCounts = /*[[${exportCounts}]]*/ [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          ];
+
+          // Số liệu tồn kho — inject số đếm từ server (không inject Java object)
+          const inStockCount = /*[[${stats.totalProducts - stats.lowStockCount - stats.outOfStockCount}]]*/ 0;
+          const lowStockCount = /*[[${stats.lowStockCount}]]*/ 0;
+          const outStockCount = /*[[${stats.outOfStockCount}]]*/ 0;
+
+          // ── Biểu đồ cột nhập/xuất ──────────────────────────────────────────────
+          const monthlyCtx = document.getElementById("monthlyChart");
+          if (monthlyCtx && typeof Chart !== "undefined") {
+            new Chart(monthlyCtx, {
+              type: "bar",
+              data: {
+                labels: [
+                  "T1",
+                  "T2",
+                  "T3",
+                  "T4",
+                  "T5",
+                  "T6",
+                  "T7",
+                  "T8",
+                  "T9",
+                  "T10",
+                  "T11",
+                  "T12",
+                ],
+                datasets: [
+                  {
+                    label: "Số phiếu nhập",
+                    data: importCounts,
+                    backgroundColor: "rgba(26,35,126,0.75)",
+                    borderRadius: 6,
+                  },
+                  {
+                    label: "Số phiếu xuất",
+                    data: exportCounts,
+                    backgroundColor: "rgba(230,81,0,0.75)",
+                    borderRadius: 6,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "top" } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+              },
+            });
+          }
+
+          // ── Biểu đồ tròn tồn kho ──────────────────────────────────────────────
+          const stockCtx = document.getElementById("stockChart");
+          if (stockCtx && typeof Chart !== "undefined") {
+            new Chart(stockCtx, {
+              type: "doughnut",
+              data: {
+                labels: ["Đủ hàng", "Sắp hết", "Hết hàng"],
+                datasets: [
+                  {
+                    data: [inStockCount, lowStockCount, outStockCount],
+                    backgroundColor: ["#4caf50", "#ff9800", "#f44336"],
+                    borderWidth: 3,
+                    borderColor: "#fff",
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: "bottom" },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => " " + ctx.label + ": " + ctx.raw + " sp",
+                    },
+                  },
+                },
+              },
+            });
+          }
+        });
+      </script>
+    </main>
+  </body>
+</html>

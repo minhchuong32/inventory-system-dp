@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'exports')}">
+<head><title th:text="'Phiếu xuất '+${order.code}">Chi tiết phiếu xuất</title></head>
+<body><main>
+<div class="card mb-4" style="border-left:4px solid #e65100;">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 style="font-weight:700;color:#e65100;">
+                    <i class="bi bi-upload"></i> PHIẾU XUẤT KHO: <span th:text="${order.code}"></span>
+                </h5>
+                <div class="row mt-2 g-3">
+                    <div class="col-auto">
+                        <span style="font-size:13px;color:#888;">Ngày xuất:</span>
+                        <strong th:text="${#temporals.format(order.orderDate,'dd/MM/yyyy')}"></strong>
+                    </div>
+                    <div class="col-auto" th:if="${order.customer}">
+                        <span style="font-size:13px;color:#888;">Khách hàng:</span>
+                        <strong th:text="${order.customer.name}"></strong>
+                    </div>
+                    <div class="col-auto" th:if="${order.deliveryAddress}">
+                        <span style="font-size:13px;color:#888;">Giao đến:</span>
+                        <strong th:text="${order.deliveryAddress}"></strong>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge-status" th:class="'badge-status '+${order.status.cssClass}"
+                              th:text="${order.status.displayName}"></span>
+                    </div>
+                    <div class="col-auto">
+                        <span th:class="'badge-status '+(${order.paymentStatus.name()=='PAID'}?'badge-completed':
+                                         (${order.paymentStatus.name()=='PARTIAL'}?'badge-pending':'badge-cancelled'))"
+                              th:text="${order.paymentStatus.displayName}"></span>
+                    </div>
+                </div>
+                <div th:if="${order.note}" class="mt-2" style="font-size:13px;color:#777;">
+                    <i class="bi bi-chat-text"></i> <em th:text="${order.note}"></em>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div style="font-size:12px;color:#888;">TỔNG TIỀN</div>
+                <div style="font-size:28px;font-weight:700;color:#e65100;"
+                     th:text="${#numbers.formatDecimal(order.finalAmount,0,'COMMA',0,'POINT')+' ₫'}"></div>
+                <div class="d-flex gap-2 justify-content-end mt-3 no-print">
+                    <a th:href="@{/exports}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Danh sách</a>
+                    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> In phiếu</button>
+                    <form sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:if="${order.pending}" th:action="@{/exports/{id}/complete(id=${order.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Xác nhận xuất kho? Tồn kho sẽ bị trừ!')">
+                        <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> Xác nhận xuất kho</button>
+                    </form>
+                    <form sec:authorize="hasAnyRole('ADMIN','MANAGER')" th:if="${order.pending}" th:action="@{/exports/{id}/cancel(id=${order.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Hủy phiếu xuất này?')">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i> Hủy phiếu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h6 class="card-title"><i class="bi bi-list-ul"></i> Chi tiết hàng xuất</h6></div>
+    <div class="table-wrapper">
+        <table class="inv-table">
+            <thead><tr>
+                <th>#</th><th>Mã SP</th><th>Tên sản phẩm</th><th>Đơn vị</th>
+                <th>Số lượng</th><th>Đơn giá</th><th>Chiết khấu</th><th>Thành tiền</th>
+            </tr></thead>
+            <tbody>
+            <tr th:each="d,stat : ${order.details}">
+                <td th:text="${stat.index+1}" style="color:#aaa;"></td>
+                <td><span style="font-family:monospace;color:#e65100;font-weight:600;" th:text="${d.product.code}"></span></td>
+                <td style="font-weight:600;" th:text="${d.product.name}"></td>
+                <td th:text="${d.product.unitName ?: '—'}"></td>
+                <td style="text-align:center;font-weight:600;" th:text="${d.quantity}"></td>
+                <td th:text="${#numbers.formatDecimal(d.unitPrice,0,'COMMA',0,'POINT')+' ₫'}"></td>
+                <td>
+                    <span th:if="${d.discountPercent!=null and d.discountPercent.compareTo(T(java.math.BigDecimal).ZERO)>0}"
+                          style="color:#e65100;" th:text="${d.discountPercent}+'%'">0%</span>
+                    <span th:otherwise>—</span>
+                </td>
+                <td style="font-weight:700;color:#e65100;"
+                    th:text="${#numbers.formatDecimal(d.totalPrice,0,'COMMA',0,'POINT')+' ₫'}"></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr style="background:#fff3e0;">
+                <td colspan="7" style="text-align:right;font-weight:700;padding:12px 16px;">TỔNG CỘNG:</td>
+                <td style="font-weight:700;color:#e65100;font-size:16px;padding:12px 16px;"
+                    th:text="${#numbers.formatDecimal(order.finalAmount,0,'COMMA',0,'POINT')+' ₫'}"></td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+</main></body></html>

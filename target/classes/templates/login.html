@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | IMS v2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root { --primary:#1a237e; --primary-light:#3949ab; --accent:#00acc1; }
+        body { background: linear-gradient(135deg, #0d1257 0%, #1a237e 50%, #283593 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+        .login-card { background:white; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden; width:100%; max-width:440px; }
+        .login-header { background:linear-gradient(135deg,var(--primary),var(--primary-light)); padding:36px; text-align:center; color:white; }
+        .logo-circle { width:72px;height:72px;background:rgba(255,255,255,0.15);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:12px; }
+        .login-body { padding:36px; }
+        .form-control { border:1.5px solid #e8eaf6;border-radius:10px;padding:11px 16px;font-size:14px; }
+        .form-control:focus { border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(57,73,171,0.1);outline:none; }
+        .btn-login { background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%;transition:all 0.2s; }
+        .btn-login:hover { transform:translateY(-2px);box-shadow:0 8px 20px rgba(26,35,126,0.4); }
+        .input-icon { position:relative; }
+        .input-icon i { position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#aaa;font-size:16px;z-index:5; }
+        .input-icon .form-control { padding-left:42px; }
+        .alert-danger { background:#ffebee;color:#c62828;border:none;border-left:4px solid #c62828;border-radius:8px;font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="login-header">
+        <div class="logo-circle"><i class="bi bi-boxes"></i></div>
+        <h4 class="mb-1 fw-bold">Kho Hàng Pro v2</h4>
+        <p class="mb-0 opacity-75" style="font-size:13px;">Inventory Management System</p>
+    </div>
+    <div class="login-body">
+        <div th:if="${param.error}" class="alert alert-danger mb-3">
+            <i class="bi bi-exclamation-circle me-2"></i>Tên đăng nhập hoặc mật khẩu không đúng.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-success mb-3" style="background:#e8f5e9;color:#2e7d32;border-left:4px solid #2e7d32;border:none;border-radius:8px;font-size:13px;">
+            <i class="bi bi-check-circle me-2"></i>Đăng xuất thành công.
+        </div>
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-600" style="font-size:13px;color:#555;">Tên đăng nhập</label>
+                <div class="input-icon">
+                    <i class="bi bi-person"></i>
+                    <input type="text" name="username" class="form-control" placeholder="admin" required autofocus>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-600" style="font-size:13px;color:#555;">Mật khẩu</label>
+                <div class="input-icon">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+            </button>
+        </form>
+        <p class="text-center mt-3 mb-0" style="font-size:12px;color:#aaa;">IMS v2.0 &copy; 2025 — OOP Refactored</p>
+    </div>
+</div>
+</body>
+</html>

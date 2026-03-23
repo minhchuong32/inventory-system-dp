@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, 'suppliers')}">
+<head><title th:text="${supplier.id==null}?'Thêm NCC':'Sửa NCC'">Form NCC</title></head>
+<body><main>
+<div class="row justify-content-center"><div class="col-lg-8">
+    <div class="card">
+        <div class="card-header">
+            <h6 class="card-title"><i class="bi bi-truck"></i>
+                <span th:text="${supplier.id==null}?'Thêm nhà cung cấp':'Cập nhật nhà cung cấp'"></span>
+            </h6>
+            <a th:href="@{/suppliers}" class="btn-sm-action btn-view"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/suppliers/save}" method="post" th:object="${supplier}">
+                <input type="hidden" th:field="*{id}">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="bi bi-info-circle"></i> Thông tin cơ bản</div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Mã NCC *</label>
+                            <input type="text" th:field="*{code}" class="form-control" th:classappend="${#fields.hasErrors('code')}?'is-invalid'" placeholder="NCC0001">
+                            <div class="invalid-feedback" th:errors="*{code}"></div>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label">Tên nhà cung cấp *</label>
+                            <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')}?'is-invalid'" placeholder="Tên công ty">
+                            <div class="invalid-feedback" th:errors="*{name}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Người liên hệ</label>
+                            <input type="text" th:field="*{contactPerson}" class="form-control" placeholder="Nguyễn Văn A">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Điện thoại</label>
+                            <input type="text" th:field="*{phone}" class="form-control" placeholder="0901234567">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" th:field="*{email}" class="form-control" th:classappend="${#fields.hasErrors('email')}?'is-invalid'" placeholder="email@example.com">
+                            <div class="invalid-feedback" th:errors="*{email}"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mã số thuế</label>
+                            <input type="text" th:field="*{taxCode}" class="form-control" placeholder="0300000000">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" th:field="*{address}" class="form-control" placeholder="Địa chỉ công ty">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="bi bi-bank2"></i> Thông tin tài chính & Ngân hàng</div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Số tài khoản</label>
+                            <input type="text" th:field="*{bankAccount}" class="form-control" placeholder="012345678901">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tên ngân hàng</label>
+                            <input type="text" th:field="*{bankName}" class="form-control" placeholder="Vietcombank">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Hạn mức nợ (₫)</label>
+                            <input type="number" th:field="*{creditLimit}" class="form-control" min="0" step="1000000">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Trạng thái</label>
+                            <select th:field="*{status}" class="form-select">
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Ngừng hợp tác</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 justify-content-end">
+                    <a th:href="@{/suppliers}" class="btn btn-light">Hủy</a>
+                    <button type="submit" class="btn-primary-custom"><i class="bi bi-save"></i> Lưu nhà cung cấp</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div></div>
+</main></body></html>

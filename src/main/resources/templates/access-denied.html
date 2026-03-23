@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::title/text()}, ~{::main}, '')}">
+<head><title>Không có quyền truy cập</title></head>
+<body>
+<main>
+<div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+    <div class="text-center" style="max-width:480px;">
+        <div style="font-size:80px;line-height:1;">🔒</div>
+        <h2 style="font-size:28px;font-weight:800;color:#c62828;margin:20px 0 8px;">
+            Không có quyền truy cập
+        </h2>
+        <p style="color:#666;font-size:15px;margin-bottom:8px;">
+            Tài khoản của bạn (<strong sec:authentication="name">user</strong>)
+            không có quyền thực hiện thao tác này.
+        </p>
+        <div style="background:#fff8e1;border-left:4px solid #f57f17;border-radius:8px;
+                    padding:14px 18px;margin:20px 0;text-align:left;">
+            <p style="font-size:13px;color:#555;margin:0 0 6px;font-weight:600;">
+                Phân quyền hệ thống:
+            </p>
+            <div style="font-size:13px;color:#555;line-height:1.8;">
+                <span style="color:#c62828;font-weight:700;">ADMIN</span>
+                &nbsp;–&nbsp;Toàn quyền + quản lý tài khoản<br>
+                <span style="color:#e65100;font-weight:700;">MANAGER</span>
+                &nbsp;–&nbsp;Quản lý nghiệp vụ (tạo + xác nhận phiếu)<br>
+                <span style="color:#2e7d32;font-weight:700;">STAFF</span>
+                &nbsp;–&nbsp;Xem danh sách + tạo phiếu (chờ phê duyệt)
+            </div>
+        </div>
+        <p style="font-size:13px;color:#aaa;margin-bottom:24px;">
+            Nếu cần quyền cao hơn, vui lòng liên hệ quản trị viên hệ thống.
+        </p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="javascript:history.back()" class="btn-sm-action btn-view"
+               style="padding:10px 20px;font-size:14px;">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <a th:href="@{/dashboard}" class="btn-primary-custom">
+                <i class="bi bi-grid-fill"></i> Về Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+</main>
+</body>
+</html>
