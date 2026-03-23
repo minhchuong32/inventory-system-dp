@@ -17,7 +17,7 @@
 ---
 
 ## 🎯 Mô tả dự án
-Dự án là một hệ thống quản lý nhập – xuất – tồn kho cho một doanh nghiệp bán lẻ. Phiên bản v3 này được refactor từ v1 bằng cách áp dụng 5 design patterns quan trọng: Observer, Strategy, Factory Method, Decorator, và Facade.
+Dự án là một hệ thống quản lý nhập – xuất – tồn kho cho một doanh nghiệp bán lẻ. Phiên bản v2 này được refactor từ v1 bằng cách áp dụng 5 design patterns quan trọng: Observer, Strategy, Factory Method, Decorator, và Facade.
 
 - 🔧 Tăng tính **bảo trì** — thêm hành vi mới không cần sửa code cũ
 - 🔌 Giảm **coupling** — các thành phần phụ thuộc vào interface, không phụ thuộc implementation
@@ -105,8 +105,8 @@ PricingContext.resolveStrategy(customer)
 **Vấn đề giải quyết**: Khởi tạo `ImportOrder`/`ExportOrder` cùng với danh sách detail và tính tổng tiền là logic phức tạp, lặp lại ở nhiều nơi. Factory tập trung logic này vào một chỗ.
 
 ```java
-// Trước v3: logic rải rác trong controller và service
-// Sau v3: gọi 1 dòng duy nhất
+// Trước v2: logic rải rác trong controller và service
+// Sau v2: gọi 1 dòng duy nhất
 ImportOrder order = importOrderFactory.createOrder(request);
 ExportOrder order = exportOrderFactory.createOrder(request);
 ```
@@ -196,7 +196,7 @@ src/main/java/com/inventory/
 ├── service/                         # 7 interfaces
 ├── service/impl/                    # 7 implementations (dùng patterns)
 │
-└── pattern/                         # ★ MỚI TRONG v3
+└── pattern/                         # ★ MỚI TRONG v2
     ├── observer/
     │   ├── StockEvent.java              # Event object (Value Object)
     │   ├── StockEventObserver.java      # Observer interface
@@ -266,7 +266,7 @@ src/main/java/com/inventory/
 
 ```properties
 # src/main/resources/application.properties
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=inventory_db_v2;encrypt=false;trustServerCertificate=true
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=inventory_db;encrypt=false;trustServerCertificate=true
 spring.datasource.username=sa
 spring.datasource.password=YourPassword123
 ```
@@ -301,7 +301,7 @@ WHERE username IN ('admin', 'manager', 'staff1');
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        REQUEST FLOW (v3)                         │
+│                        REQUEST FLOW (v2)                         │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  Browser  ──►  Controller  ──►  InventoryFacade  (FACADE)       │
