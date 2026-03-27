@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class RetailPricingStrategy implements PricingStrategy {
 
     @Override
-    public String getStrategyName() { return "Bán lẻ (Retail)"; }
+    public String getStrategyName() { return PricingType.RETAIL.name(); }
 
     @Override
     public BigDecimal calculatePrice(BigDecimal basePrice, int quantity, BigDecimal totalPurchase) {
@@ -22,4 +22,9 @@ public class RetailPricingStrategy implements PricingStrategy {
     public BigDecimal getDiscountPercent(int quantity, BigDecimal totalPurchase) {
         return BigDecimal.ZERO;
     }
+
+    @Override
+public boolean supports(String customerType) {
+    return customerType == null || PricingType.RETAIL.name().equalsIgnoreCase(customerType);
+}
 }

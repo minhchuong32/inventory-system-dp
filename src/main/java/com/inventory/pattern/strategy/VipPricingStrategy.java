@@ -16,7 +16,7 @@ public class VipPricingStrategy implements PricingStrategy {
     private static final BigDecimal BASE_VIP_DISCOUNT = BigDecimal.valueOf(20);
 
     @Override
-    public String getStrategyName() { return "VIP"; }
+    public String getStrategyName() { return PricingType.VIP.name(); }
 
     @Override
     public BigDecimal calculatePrice(BigDecimal basePrice, int quantity, BigDecimal totalPurchase) {
@@ -34,4 +34,9 @@ public class VipPricingStrategy implements PricingStrategy {
         }
         return BASE_VIP_DISCOUNT.add(extra);
     }
+    
+    @Override
+public boolean supports(String customerType) {
+    return customerType == null || PricingType.VIP.name().equalsIgnoreCase(customerType);
+}
 }

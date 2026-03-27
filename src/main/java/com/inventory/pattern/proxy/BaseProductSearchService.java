@@ -1,4 +1,4 @@
-package com.inventory.pattern.decorator;
+package com.inventory.pattern.proxy;
 
 import com.inventory.entity.Product;
 import com.inventory.repository.ProductRepository;

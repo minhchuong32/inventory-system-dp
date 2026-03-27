@@ -50,11 +50,17 @@ public class InventoryFacade {
      */
     public ImportOrder createImportOrder(OrderRequest request) {
         ImportOrder order = importOrderFactory.createOrder(request);
-        ImportOrder saved = importOrderRepository.save(order);
-        log.info("FACADE: ImportOrder created → {}", saved.getCode());
-        return saved;
+        log.info("FACADE: ImportOrder created → {}", order.getCode());
+        return order;
     }
-
+    /**
+     * Tạo phiếu xuất kho mới (dùng ExportOrderFactory + PricingStrategy).
+     */
+    public ExportOrder createExportOrder(OrderRequest request) {
+        ExportOrder order = exportOrderFactory.createOrder(request);
+        log.info("FACADE: ExportOrder created → {}", order.getCode());
+        return order;
+    }
     /**
      * Xác nhận nhập kho:
      * 1. Cộng tồn kho cho từng sản phẩm
@@ -63,17 +69,22 @@ public class InventoryFacade {
     public ImportOrder confirmImport(Long orderId) {
         ImportOrder order = importOrderRepository.findByIdWithDetails(orderId)
             .orElseThrow(() -> new com.inventory.exception.ResourceNotFoundException("ImportOrder", orderId));
-
         order.complete();
-
+        List<Long> productIds = order.getDetails().stream()
+            .map(detail -> detail.getProduct().getId())
+            .distinct()
+            .toList();
+        List<Product> products = productRepository.findAllById(productIds);
+        Map<Long, Product> productMap = products.stream()
+            .collect(Collectors.toMap(Product::getId, p -> p));
         for (ImportDetail detail : order.getDetails()) {
-            Product product = productRepository.findById(detail.getProduct().getId())
-                .orElseThrow(() -> new com.inventory.exception.ResourceNotFoundException("Product", detail.getProduct().getId()));
-
+            Product product = productMap.get(detail.getProduct().getId());
+            if (product == null) {
+                throw new com.inventory.exception.ResourceNotFoundException("Product", detail.getProduct().getId());
+            }
             int before = product.getQuantity();
             product.increaseStock(detail.getQuantity());
             productRepository.save(product);
-
             // Publish event → StockMovementAuditObserver + LowStockAlertObserver
             stockEventPublisher.publish(StockEvent.builder()
                 .product(product)
@@ -96,12 +107,7 @@ public class InventoryFacade {
     /**
      * Tạo phiếu xuất kho mới (dùng ExportOrderFactory + PricingStrategy).
      */
-    public ExportOrder createExportOrder(OrderRequest request) {
-        ExportOrder order = exportOrderFactory.createOrder(request);
-        ExportOrder saved = exportOrderRepository.save(order);
-        log.info("FACADE: ExportOrder created → {}", saved.getCode());
-        return saved;
-    }
+   
 
     /**
      * Xác nhận xuất kho:
@@ -125,9 +131,15 @@ public class InventoryFacade {
         }
 
         order.complete();
-
+        List<Long> productIds = order.getDetails().stream()
+            .map(detail -> detail.getProduct().getId())
+            .distinct()
+            .toList();
+        List<Product> products = productRepository.findAllById(productIds);
+        Map<Long, Product> productMap = products.stream()
+            .collect(Collectors.toMap(Product::getId, p -> p));
         for (ExportDetail detail : order.getDetails()) {
-            Product product = productRepository.findById(detail.getProduct().getId()).get();
+            Product product = productMap.get(detail.getProduct().getId());
             int before = product.getQuantity();
             product.decreaseStock(detail.getQuantity());
             productRepository.save(product);

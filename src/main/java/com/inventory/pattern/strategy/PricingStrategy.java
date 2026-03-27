@@ -20,4 +20,6 @@ public interface PricingStrategy {
 
     /** Tính % chiết khấu để hiển thị trên phiếu */
     BigDecimal getDiscountPercent(int quantity, BigDecimal totalPurchase);
+
+    boolean supports(String customerType);
 }
