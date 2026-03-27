@@ -18,20 +18,23 @@ import java.util.List;
 public class ImportOrderFactory implements OrderFactory<ImportOrder> {
 
     private final ImportOrderRepository importOrderRepository;
-
+    private final CodeGenerator codeGenerator; 
     @Override
-    public String getOrderType() { return "IMPORT"; }
+    public String getOrderType() { return OrderType.IMPORT.name(); }
 
     @Override
     public ImportOrder createOrder(OrderRequest request) {
-        ImportOrder order = new ImportOrder();
+        LocalDate orderDate = request.getOrderDate() != null
+            ? request.getOrderDate()
+            : LocalDate.now();
 
-        // Set header fields
-        order.setOrderDate(request.getOrderDate() != null ? request.getOrderDate() : LocalDate.now());
-        order.setNote(request.getNote());
-        order.setInvoiceNumber(request.getInvoiceNumber());
-        order.setExpectedDate(request.getExpectedDate());
-        order.setCode(generateCode());
+        ImportOrder order = ImportOrder.builder()
+                .orderDate(orderDate)
+                .note(request.getNote())
+                .invoiceNumber(request.getInvoiceNumber())
+                .expectedDate(request.getExpectedDate())
+                .code(codeGenerator.generateImportCode())
+                .build();
 
         // Set supplier reference
         if (request.getSupplierId() != null) {
@@ -44,8 +47,7 @@ public class ImportOrderFactory implements OrderFactory<ImportOrder> {
         List<ImportDetail> details = buildDetails(order, request);
         order.setDetails(details);
         order.calculateTotal();
-
-        return order;
+        return this.importOrderRepository.save(order);
     }
 
     private List<ImportDetail> buildDetails(ImportOrder order, OrderRequest request) {
@@ -68,8 +70,4 @@ public class ImportOrderFactory implements OrderFactory<ImportOrder> {
         return details;
     }
 
-    private String generateCode() {
-        long seq = importOrderRepository.count() + 1;
-        return String.format("PN%06d", seq);
-    }
 }

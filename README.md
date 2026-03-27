@@ -119,7 +119,7 @@ ExportOrder order = exportOrderFactory.createOrder(request);
 
 ### 4. 🎀 Decorator Pattern — Product Search
 
-**Vị trí**: `pattern/decorator/`
+**Vị trí**: `pattern/proxy/`
 
 **Vấn đề giải quyết**: Cần thêm logging thời gian tìm kiếm và cache kết quả mà **không sửa** `BaseProductSearchService`.
 
@@ -217,7 +217,7 @@ src/main/java/com/inventory/
     │   ├── ImportOrderFactory.java      # Concrete Creator
     │   └── ExportOrderFactory.java      # Concrete Creator (+ Strategy)
     │
-    ├── decorator/
+    ├── proxy/
     │   ├── ProductSearchService.java    # Component interface
     │   ├── BaseProductSearchService.java     # Concrete Component
     │   ├── ProductSearchDecorator.java       # Abstract Decorator

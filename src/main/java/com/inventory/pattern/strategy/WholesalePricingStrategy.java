@@ -15,7 +15,7 @@ import java.math.RoundingMode;
 public class WholesalePricingStrategy implements PricingStrategy {
 
     @Override
-    public String getStrategyName() { return "Bán sỉ (Wholesale)"; }
+    public String getStrategyName() { return PricingType.WHOLESALE.name(); }
 
     @Override
     public BigDecimal calculatePrice(BigDecimal basePrice, int quantity, BigDecimal totalPurchase) {
@@ -31,4 +31,9 @@ public class WholesalePricingStrategy implements PricingStrategy {
         if (quantity >= 10)  return BigDecimal.valueOf(5);
         return BigDecimal.ZERO;
     }
+    
+    @Override
+public boolean supports(String customerType) {
+    return customerType == null || PricingType.WHOLESALE.name().equalsIgnoreCase(customerType);
+}
 }

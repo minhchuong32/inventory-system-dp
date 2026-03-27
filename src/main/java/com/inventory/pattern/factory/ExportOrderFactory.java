@@ -21,35 +21,31 @@ import java.util.List;
 public class ExportOrderFactory implements OrderFactory<ExportOrder> {
 
     private final ExportOrderRepository exportOrderRepository;
-    private final CustomerRepository    customerRepository;
-    private final PricingContext        pricingContext;   // Strategy integration
-
+    private final CustomerRepository customerRepository;
+    private final PricingContext pricingContext;
+     private final CodeGenerator codeGenerator; 
     @Override
-    public String getOrderType() { return "EXPORT"; }
+    public String getOrderType() { return OrderType.EXPORT.name(); }
 
     @Override
     public ExportOrder createOrder(OrderRequest request) {
-        ExportOrder order = new ExportOrder();
-
-        order.setOrderDate(request.getOrderDate() != null ? request.getOrderDate() : LocalDate.now());
-        order.setNote(request.getNote());
-        order.setDeliveryAddress(request.getDeliveryAddress());
-        order.setExpectedDelivery(request.getExpectedDelivery());
-        order.setCode(generateCode());
 
         // Resolve customer for pricing strategy
-        Customer customer = null;
-        if (request.getCustomerId() != null) {
-            customer = customerRepository.findById(request.getCustomerId()).orElse(null);
-            order.setCustomer(customer);
-        }
+        Customer customer = customerRepository.findById(request.getCustomerId()).orElse(null);
 
-        // Build detail lines with pricing strategy applied
+        ExportOrder order = ExportOrder.builder()
+            .orderDate(request.getOrderDate() != null ? request.getOrderDate() : LocalDate.now())
+            .note(request.getNote())
+            .deliveryAddress(request.getDeliveryAddress())
+            .expectedDelivery(request.getExpectedDelivery())
+            .code(codeGenerator.generateExportCode())
+            .customer(customer)
+            .build();
+
         List<ExportDetail> details = buildDetails(order, request, customer);
         order.setDetails(details);
         order.calculateTotal();
-
-        return order;
+        return this.exportOrderRepository.save(order);
     }
 
     private List<ExportDetail> buildDetails(ExportOrder order, OrderRequest request, Customer customer) {
@@ -76,8 +72,4 @@ public class ExportOrderFactory implements OrderFactory<ExportOrder> {
         return details;
     }
 
-    private String generateCode() {
-        long seq = exportOrderRepository.count() + 1;
-        return String.format("PX%06d", seq);
-    }
 }

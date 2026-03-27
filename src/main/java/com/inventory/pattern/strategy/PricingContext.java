@@ -11,33 +11,33 @@ import java.math.BigDecimal;
  * Chọn PricingStrategy phù hợp dựa trên loại khách hàng,
  * rồi ủy quyền tính toán cho strategy đó.
  */
+
 @Component
 @Slf4j
 public class PricingContext {
+    private final List<PricingStrategy> allStrategies;
 
-    private final PricingStrategy retailStrategy;
-    private final PricingStrategy wholesaleStrategy;
-    private final PricingStrategy vipStrategy;
-
-    public PricingContext(
-            @Qualifier("retailPricing")    PricingStrategy retailStrategy,
-            @Qualifier("wholesalePricing") PricingStrategy wholesaleStrategy,
-            @Qualifier("vipPricing")       PricingStrategy vipStrategy) {
-        this.retailStrategy    = retailStrategy;
-        this.wholesaleStrategy = wholesaleStrategy;
-        this.vipStrategy       = vipStrategy;
+    public PricingContext(List<PricingStrategy> allStrategies){
+        this.allStrategies = allStrategies;
     }
 
     /**
      * Chọn strategy theo customerType của khách hàng.
      */
     public PricingStrategy resolveStrategy(Customer customer) {
-        if (customer == null) return retailStrategy;
-        return switch (customer.getCustomerType()) {
-            case "VIP"       -> vipStrategy;
-            case "WHOLESALE" -> wholesaleStrategy;
-            default          -> retailStrategy;
-        };
+        if (customer == null) return getDefaultStrategy();
+
+        return allStrategies.stream()
+                .filter(s -> s.supports(customer.getCustomerType()))
+                .findFirst()
+                .orElse(getDefaultStrategy());
+    }
+
+    private PricingStrategy getDefaultStrategy() {
+        return allStrategies.stream()
+                .filter(s -> s.supports(PricingType.RETAIL.name()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Retail strategy not found"));
     }
 
     /**

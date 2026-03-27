@@ -3,7 +3,7 @@ package com.inventory.service.impl;
 import com.inventory.entity.Product;
 import com.inventory.enums.MovementType;
 import com.inventory.exception.*;
-import com.inventory.pattern.decorator.CachingProductSearchDecorator;
+import com.inventory.pattern.proxy.CachingProductSearchDecorator;
 import com.inventory.repository.ProductRepository;
 import com.inventory.service.ProductService;
 import com.inventory.service.StockService;
